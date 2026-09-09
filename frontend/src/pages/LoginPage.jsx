@@ -1,14 +1,20 @@
 import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Navigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { Card } from '../components/Card.jsx';
 
 export function LoginPage() {
-  const { login } = useAuth();
+  const { login, isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Already logged in (e.g. landed on "/" with a session still active) —
+  // go straight to the right dashboard instead of showing the form again.
+  if (isAuthenticated) {
+    return <Navigate to={`/dashboard/${user.role}`} replace />;
+  }
 
   function handleChange(e) {
     setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
@@ -19,8 +25,8 @@ export function LoginPage() {
     setError('');
     setSubmitting(true);
     try {
-      const { user } = await login(form);
-      navigate(`/dashboard/${user.role}`, { replace: true });
+      const { user: loggedInUser } = await login(form);
+      navigate(`/dashboard/${loggedInUser.role}`, { replace: true });
     } catch (err) {
       setError(err.message || 'Login failed.');
     } finally {

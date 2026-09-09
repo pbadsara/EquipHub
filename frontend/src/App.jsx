@@ -2,7 +2,6 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { ProtectedRoute } from './components/ProtectedRoute.jsx';
 import { Header } from './components/Header.jsx';
-import { HomePage } from './pages/HomePage.jsx';
 import { LoginPage } from './pages/LoginPage.jsx';
 import { RegisterPage } from './pages/RegisterPage.jsx';
 import { AdminDashboard } from './pages/AdminDashboard.jsx';
@@ -16,7 +15,9 @@ export default function App() {
         <Header />
         <main className="app-main">
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            {/* Landing page is the login form itself — already-authenticated
+                users are bounced to their dashboard by LoginPage. */}
+            <Route path="/" element={<LoginPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route
