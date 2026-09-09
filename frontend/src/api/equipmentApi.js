@@ -66,3 +66,44 @@ export async function deleteListing(token, id) {
   });
   return handleResponse(res);
 }
+
+// ---- Admin review queue (Phase A2) ----
+
+export async function fetchPendingListings(token) {
+  const res = await fetch(`${API_URL}/equipment/pending`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}
+
+export async function approveListing(token, id) {
+  const res = await fetch(`${API_URL}/equipment/${id}/approve`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return handleResponse(res);
+}
+
+export async function rejectListing(token, id, reason) {
+  const res = await fetch(`${API_URL}/equipment/${id}/reject`, {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ reason }),
+  });
+  return handleResponse(res);
+}
+
+// ---- Public catalogue (Phase A2) ----
+
+export async function fetchCatalogue(params = {}) {
+  const query = new URLSearchParams(
+    Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== ''))
+  ).toString();
+  const res = await fetch(`${API_URL}/equipment${query ? `?${query}` : ''}`);
+  return handleResponse(res);
+}
+
+export async function fetchListingById(id) {
+  const res = await fetch(`${API_URL}/equipment/${id}`);
+  return handleResponse(res);
+}

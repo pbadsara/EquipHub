@@ -11,6 +11,11 @@ export function errorHandler(err, req, res, next) { // eslint-disable-line no-un
     return res.status(409).json({ message: 'A user with this email already exists.' });
   }
 
+  // Malformed ObjectId in a route param (e.g. GET /api/equipment/not-a-real-id)
+  if (err.name === 'CastError') {
+    return res.status(400).json({ message: 'Invalid ID.' });
+  }
+
   // Mongoose validation error
   if (err.name === 'ValidationError') {
     const details = Object.values(err.errors).map((e) => e.message);

@@ -15,8 +15,10 @@ export function Header() {
       <div className="app-header__inner">
         <Link to="/" className="app-header__brand">EquipHub</Link>
         <nav className="app-header__nav">
+          <Link to="/catalogue" className="btn btn--ghost">Browse</Link>
           {isAuthenticated ? (
             <>
+              <Link to={`/dashboard/${user.role}`} className="btn btn--ghost">Dashboard</Link>
               <span className="app-header__user">
                 {user.name} <span className="role-pill">{user.role}</span>
               </span>

@@ -149,3 +149,91 @@ export async function deleteEquipment(req, res, next) {
     return next(err);
   }
 }
+
+// ---- Public catalogue (Phase A2) ----
+
+export async function listCatalogue(req, res, next) {
+  try {
+    const { category, search, minPrice, maxPrice, listingType } = req.query;
+    const query = { status: EQUIPMENT_STATUS.APPROVED };
+
+    if (category) query.category = category;
+    if (listingType) query.listingType = listingType;
+    if (minPrice || maxPrice) {
+      query.price = {};
+      if (minPrice) query.price.$gte = Number(minPrice);
+      if (maxPrice) query.price.$lte = Number(maxPrice);
+    }
+    if (search) {
+      const regex = new RegExp(search.trim(), 'i');
+      query.$or = [{ title: regex }, { description: regex }, { category: regex }];
+    }
+
+    const items = await Equipment.find(query).sort({ createdAt: -1 });
+    return res.status(200).json({ equipment: items.map((item) => item.toSafeObject()) });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function getEquipmentById(req, res, next) {
+  try {
+    // Public endpoint — only ever exposes approved listings. Sellers see their
+    // own (any status) via /mine, admins see pending ones via /pending.
+    const equipment = await Equipment.findOne({ _id: req.params.id, status: EQUIPMENT_STATUS.APPROVED });
+    if (!equipment) {
+      return res.status(404).json({ message: 'Listing not found.' });
+    }
+    return res.status(200).json({ equipment: equipment.toSafeObject() });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+// ---- Admin review queue (Phase A2) ----
+
+export async function listPendingEquipment(req, res, next) {
+  try {
+    const items = await Equipment.find({ status: EQUIPMENT_STATUS.PENDING }).sort({ createdAt: 1 });
+    return res.status(200).json({ equipment: items.map((item) => item.toSafeObject()) });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function approveEquipment(req, res, next) {
+  try {
+    const equipment = await Equipment.findById(req.params.id);
+    if (!equipment) {
+      return res.status(404).json({ message: 'Listing not found.' });
+    }
+    if (equipment.status !== EQUIPMENT_STATUS.PENDING) {
+      return res.status(409).json({ message: `Only pending listings can be approved (this one is "${equipment.status}").` });
+    }
+    equipment.status = EQUIPMENT_STATUS.APPROVED;
+    equipment.rejectionReason = null;
+    await equipment.save();
+    return res.status(200).json({ equipment: equipment.toSafeObject() });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+export async function rejectEquipment(req, res, next) {
+  try {
+    const equipment = await Equipment.findById(req.params.id);
+    if (!equipment) {
+      return res.status(404).json({ message: 'Listing not found.' });
+    }
+    if (equipment.status !== EQUIPMENT_STATUS.PENDING) {
+      return res.status(409).json({ message: `Only pending listings can be rejected (this one is "${equipment.status}").` });
+    }
+    const { reason } = req.body;
+    equipment.status = EQUIPMENT_STATUS.REJECTED;
+    equipment.rejectionReason = reason || 'No reason given.';
+    await equipment.save();
+    return res.status(200).json({ equipment: equipment.toSafeObject() });
+  } catch (err) {
+    return next(err);
+  }
+}
