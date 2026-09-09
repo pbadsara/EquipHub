@@ -123,13 +123,25 @@ TEST_MONGODB_URI="mongodb://127.0.0.1:27017/equiphub_test" npm test
 ```
 
 **What this means for you:** the auth logic itself is proven against a real database
-engine, not guessed at. What's *not* yet proven is behaviour against MongoDB's own server
-specifically (Atlas or a real local `mongod`) — FerretDB doesn't implement 100% of MongoDB's
-feature surface. Everything used here (basic CRUD, unique indexes, `$set`, simple queries)
-is standard and should behave identically, but the first time you connect this to a real
-Atlas cluster, re-run `npm test` with `TEST_MONGODB_URI` pointed at it (or just `npm test`
-with a working internet connection, so `mongodb-memory-server` can fetch a real `mongod`)
-to close that gap for real.
+engine, not guessed at. What's *not* yet proven from inside that sandbox is behaviour
+against MongoDB's own server specifically — and it turns out that gap can't be closed from
+there at all: the sandbox has no direct DNS resolution and no raw outbound TCP (only
+HTTP/HTTPS through an allowlisted forward proxy), so a MongoDB driver connection — which
+needs a live SRV/TXT DNS lookup and a raw TCP socket on port 27017 — cannot reach Atlas or
+any other live Mongo server from there, confirmed with a direct connection attempt
+(`querySrv ECONNREFUSED`). `backend/.env` already has the real Atlas URI wired in and is
+correct; it just needs to be run somewhere with normal internet access — your own machine's
+regular terminal, for example — to actually exercise it:
+
+```bash
+cd backend
+npm test                # uses TEST_MONGODB_URI if set, otherwise mongodb-memory-server
+npm run seed:admin      # creates the real admin account in Atlas
+npm run dev              # confirm `MongoDB connected.` in the log, then hit /api/health
+```
+
+That will create the real admin account in your Atlas cluster and give the final, genuine
+confirmation this closes the loop — it's the last unverified piece.
 
 ## API reference (current)
 
