@@ -23,3 +23,7 @@ npm-debug.log*
 
 # Test / coverage
 coverage/
+
+# Uploaded equipment photos (local dev storage) — keep the folder, ignore its contents
+backend/uploads/*
+!backend/uploads/.gitkeep

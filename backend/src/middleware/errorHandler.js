@@ -17,6 +17,16 @@ export function errorHandler(err, req, res, next) { // eslint-disable-line no-un
     return res.status(400).json({ message: 'Validation failed', details });
   }
 
+  // Multer upload errors (bad file type/size) are client input problems, not server faults.
+  if (err.name === 'MulterError') {
+    const message =
+      err.code === 'LIMIT_FILE_SIZE' ? 'Photo must be 5MB or smaller.' : err.message;
+    return res.status(400).json({ message });
+  }
+  if (typeof err.message === 'string' && err.message.includes('Only JPEG, PNG, or WEBP')) {
+    return res.status(400).json({ message: err.message });
+  }
+
   res.status(status).json({
     message: err.message || 'Internal server error',
   });
