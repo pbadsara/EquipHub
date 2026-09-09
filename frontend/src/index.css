@@ -1,0 +1,203 @@
+:root {
+  color-scheme: light;
+  --header-bg: #1a1d23;
+  --header-fg: #f5f6f8;
+  --bg: #f2f3f5;
+  --card-bg: #ffffff;
+  --text: #1a1d23;
+  --text-muted: #6b7280;
+  --primary: #2563eb;
+  --primary-hover: #1d4ed8;
+  --border: #e5e7eb;
+  --danger: #dc2626;
+  --radius: 16px;
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  font-family: system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ---- Header ---- */
+.app-header {
+  background: var(--header-bg);
+  color: var(--header-fg);
+}
+.app-header__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.app-header__brand {
+  color: var(--header-fg);
+  font-weight: 700;
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+}
+.app-header__brand:hover {
+  text-decoration: none;
+  opacity: 0.9;
+}
+.app-header__nav {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.app-header__user {
+  color: var(--header-fg);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.role-pill {
+  background: rgba(255, 255, 255, 0.15);
+  color: var(--header-fg);
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  text-transform: capitalize;
+}
+
+/* ---- Layout ---- */
+.app-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px 64px;
+}
+.page--centered {
+  display: flex;
+  justify-content: center;
+  padding-top: 48px;
+}
+
+/* ---- Card ---- */
+.card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px;
+}
+.card--form {
+  width: 100%;
+  max-width: 420px;
+}
+.card__title {
+  margin: 0 0 20px;
+  font-size: 1.4rem;
+}
+.muted {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+/* ---- Forms ---- */
+.field {
+  display: block;
+  margin-bottom: 16px;
+}
+.field span,
+.field legend {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+.field input[type='text'],
+.field input[type='email'],
+.field input[type='password'] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-size: 1rem;
+}
+.field input:focus {
+  outline: 2px solid var(--primary);
+  outline-offset: 1px;
+}
+fieldset.field {
+  border: none;
+  padding: 0;
+  margin: 0 0 16px;
+}
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.form-error {
+  color: var(--danger);
+  font-size: 0.9rem;
+  margin: 0 0 12px;
+}
+.form-footnote {
+  margin-top: 16px;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+/* ---- Buttons ---- */
+.btn {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  border: 1px solid transparent;
+  cursor: pointer;
+}
+.btn--primary {
+  background: var(--primary);
+  color: #fff;
+}
+.btn--primary:hover {
+  background: var(--primary-hover);
+  text-decoration: none;
+}
+.btn--ghost {
+  background: transparent;
+  border-color: rgba(255, 255, 255, 0.3);
+  color: inherit;
+}
+.app-header__nav .btn--ghost {
+  color: var(--header-fg);
+}
+.btn--block {
+  width: 100%;
+  text-align: center;
+}
+.btn-row {
+  display: flex;
+  gap: 12px;
+}
+button.btn {
+  font-family: inherit;
+}
+button.btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
