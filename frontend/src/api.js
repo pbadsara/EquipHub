@@ -26,5 +26,7 @@ export const api = {
   reviewListing: (id, decisions) => request(`/listings/${id}/review`, { method: 'PUT', body: JSON.stringify(decisions) }),
   getMyListings: () => request('/listings/mine'),
   getReviewQueue: () => request('/listings/review-queue'),
-  getApprovedListings: () => request('/listings')
+  getApprovedListings: () => request('/listings'),
+
+  createOrder: (body) => request('/orders', { method: 'POST', body: JSON.stringify(body) })
 };

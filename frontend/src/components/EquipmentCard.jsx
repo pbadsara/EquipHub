@@ -1,6 +1,20 @@
-function EquipmentCard({ item }) {
+function EquipmentCard({ item, onClick }) {
+  const handleKeyDown = (e) => {
+    if (!onClick) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      onClick();
+    }
+  };
+
   return (
-    <div className="equipment-card">
+    <div
+      className="equipment-card"
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      tabIndex={onClick ? 0 : undefined}
+      onKeyDown={handleKeyDown}
+    >
       <div className="equipment-image-placeholder">
         {item.images.length > 0 ? (
           <img src={item.images[0]} alt={item.name} />

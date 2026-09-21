@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Routes, Route, Link } from 'react-router-dom';
 import EquipmentCard from './components/EquipmentCard';
+import ItemDetailModal from './components/ItemDetailModal';
 import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -19,6 +20,7 @@ const API_URL = 'http://localhost:5050/api';
 function listingToCardItem(listing) {
   return {
     _id: listing._id,
+    itemType: 'listing',
     name: listing.name.value,
     category: listing.category.value?.name || '',
     description: listing.description.value,
@@ -65,6 +67,9 @@ function EquipmentCatalogue() {
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
+  const [selectedItem, setSelectedItem] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -72,7 +77,10 @@ function EquipmentCatalogue() {
       api.getApprovedListings()
     ])
       .then(([equipmentItems, listings]) => {
-        setEquipment([...equipmentItems, ...listings.map(listingToCardItem)]);
+        setEquipment([
+          ...equipmentItems.map((item) => ({ ...item, itemType: 'equipment' })),
+          ...listings.map(listingToCardItem)
+        ]);
         setLoading(false);
       })
       .catch((err) => {
@@ -81,15 +89,49 @@ function EquipmentCatalogue() {
       });
   }, []);
 
+  const categories = [...new Set(equipment.map((item) => item.category).filter(Boolean))];
+
+  const filteredEquipment = equipment.filter((item) => {
+    const term = searchTerm.trim().toLowerCase();
+    const matchesSearch = !term
+      || item.name.toLowerCase().includes(term)
+      || item.description.toLowerCase().includes(term);
+    const matchesCategory = !categoryFilter || item.category === categoryFilter;
+    return matchesSearch && matchesCategory;
+  });
+
   return (
     <main>
+      <div className="search-bar">
+        <input
+          type="search"
+          placeholder="Search equipment…"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          aria-label="Search equipment"
+        />
+        <select
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value)}
+          aria-label="Filter by category"
+        >
+          <option value="">All categories</option>
+          {categories.map((c) => (
+            <option key={c} value={c}>{c}</option>
+          ))}
+        </select>
+      </div>
+
       {loading && <p>Loading equipment...</p>}
       {error && <p>Error: {error}</p>}
+      {!loading && !error && filteredEquipment.length === 0 && <p>No equipment matches your search.</p>}
       <div className="equipment-grid">
-        {equipment.map((item) => (
-          <EquipmentCard key={item._id} item={item} />
+        {filteredEquipment.map((item) => (
+          <EquipmentCard key={item._id} item={item} onClick={() => setSelectedItem(item)} />
         ))}
       </div>
+
+      {selectedItem && <ItemDetailModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
     </main>
   );
 }

@@ -25,7 +25,7 @@ app.use('/api/equipment', require('./routes/equipment'));
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/listings', require('./routes/listings'));
-// app.use('/api/bookings', require('./routes/bookings'));
+app.use('/api/orders', require('./routes/orders'));
 // app.use('/api/payments', require('./routes/payments'));
 
 const PORT = process.env.PORT || 5050;
