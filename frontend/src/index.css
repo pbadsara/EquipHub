@@ -452,3 +452,49 @@ main {
   font-weight: 600;
   cursor: pointer;
 }
+
+/* Seller image upload */
+.image-preview-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.image-preview-thumb {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+
+.image-preview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+}
+
+.image-preview-thumb button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: none;
+  background: #b91c1c;
+  color: white;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.field-hint {
+  font-size: 12px;
+  color: #888;
+  margin-top: 4px;
+}

@@ -8,8 +8,25 @@ import SellerListings from './pages/SellerListings';
 import AdminReviewQueue from './pages/AdminReviewQueue';
 import CategoryManager from './pages/CategoryManager';
 import { useAuth } from './context/AuthContext';
+import { api } from './api';
 
 const API_URL = 'http://localhost:5050/api';
+
+// A Listing's shape (name.value, price.value, category.value{...}, etc.)
+// is different from the legacy Equipment shape EquipmentCard expects
+// (flat name, hireRate.amount/period, etc). This maps one to the other
+// so an approved seller listing can render with the same card.
+function listingToCardItem(listing) {
+  return {
+    _id: listing._id,
+    name: listing.name.value,
+    category: listing.category.value?.name || '',
+    description: listing.description.value,
+    images: listing.images.value || [],
+    hireRate: { amount: listing.price.value, period: 'per_item' },
+    depositAmount: 0
+  };
+}
 
 function SiteHeader() {
   const { user, isAuthenticated, logout } = useAuth();
@@ -42,18 +59,20 @@ function SiteHeader() {
   );
 }
 
-// Public equipment browse/catalogue — unchanged from before, still the
-// Renter/Buyer home page.
+// Public browse page — Renter/Buyer home. Shows both the legacy
+// Equipment catalogue and every seller listing that's fully approved.
 function EquipmentCatalogue() {
   const [equipment, setEquipment] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    fetch(`${API_URL}/equipment`)
-      .then((res) => res.json())
-      .then((data) => {
-        setEquipment(data);
+    Promise.all([
+      fetch(`${API_URL}/equipment`).then((res) => res.json()),
+      api.getApprovedListings()
+    ])
+      .then(([equipmentItems, listings]) => {
+        setEquipment([...equipmentItems, ...listings.map(listingToCardItem)]);
         setLoading(false);
       })
       .catch((err) => {

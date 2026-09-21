@@ -7,8 +7,22 @@ const STATUS_LABEL = {
   rejected: 'Changes requested'
 };
 
+const MAX_IMAGES = 5;
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per image — keeps documents small since
+// images are stored as base64 data URLs directly on the listing (no file storage
+// service is wired up yet; fine for a demo/course project, not for production scale).
+
 function FieldStatusBadge({ status }) {
   return <span className={`field-badge field-badge-${status}`}>{STATUS_LABEL[status]}</span>;
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
 }
 
 // One listing, shown as an editable field per row. Works for both a brand
@@ -19,12 +33,40 @@ function ListingEditor({ listing, categories, onSaved }) {
     description: listing?.description.value || '',
     price: listing?.price.value ?? '',
     category: listing?.category.value?._id || listing?.category.value || '',
-    images: (listing?.images.value || []).join(', ')
+    images: listing?.images.value || []
   });
+  const [imageError, setImageError] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (key, value) => setForm((f) => ({ ...f, [key]: value }));
+
+  const handleFilesSelected = async (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = ''; // allow picking the same file again later
+    setImageError('');
+
+    if (form.images.length + files.length > MAX_IMAGES) {
+      setImageError(`You can attach at most ${MAX_IMAGES} images per listing.`);
+      return;
+    }
+    const tooLarge = files.find((f) => f.size > MAX_FILE_SIZE);
+    if (tooLarge) {
+      setImageError(`"${tooLarge.name}" is over 2MB — please use a smaller image.`);
+      return;
+    }
+
+    try {
+      const dataUrls = await Promise.all(files.map(readFileAsDataUrl));
+      setForm((f) => ({ ...f, images: [...f.images, ...dataUrls] }));
+    } catch {
+      setImageError('Could not read one of those files — please try again.');
+    }
+  };
+
+  const removeImage = (index) => {
+    setForm((f) => ({ ...f, images: f.images.filter((_, i) => i !== index) }));
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -36,7 +78,7 @@ function ListingEditor({ listing, categories, onSaved }) {
         description: form.description,
         price: Number(form.price),
         category: form.category,
-        images: form.images.split(',').map((s) => s.trim()).filter(Boolean)
+        images: form.images
       };
 
       if (listing) {
@@ -120,9 +162,26 @@ function ListingEditor({ listing, categories, onSaved }) {
 
       <div className="listing-field">
         <label htmlFor="images">
-          Image URLs, comma-separated {field('images') && <FieldStatusBadge status={field('images').status} />}
+          Photos {field('images') && <FieldStatusBadge status={field('images').status} />}
         </label>
-        <input id="images" value={form.images} onChange={(e) => handleChange('images', e.target.value)} />
+
+        {form.images.length > 0 && (
+          <div className="image-preview-row">
+            {form.images.map((src, i) => (
+              <div className="image-preview-thumb" key={i}>
+                <img src={src} alt={`Listing photo ${i + 1}`} />
+                <button type="button" onClick={() => removeImage(i)} aria-label="Remove image">×</button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {form.images.length < MAX_IMAGES && (
+          <input id="images" type="file" accept="image/*" multiple onChange={handleFilesSelected} />
+        )}
+        <p className="field-hint">Up to {MAX_IMAGES} photos, 2MB each.</p>
+
+        {imageError && <p className="field-comment">{imageError}</p>}
         {field('images')?.status === 'rejected' && <p className="field-comment">{field('images').comment}</p>}
       </div>
 
@@ -150,7 +209,7 @@ function SellerListings() {
       .catch((err) => setLoadError(err.message));
   };
 
-  useEffect(loadAll, []);
+  useEffect(() => { loadAll(); }, []);
 
   const handleSaved = () => {
     setCreating(false);

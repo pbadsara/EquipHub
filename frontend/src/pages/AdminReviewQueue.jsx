@@ -131,7 +131,7 @@ function AdminReviewQueue() {
     api.getReviewQueue().then(setQueue).catch((err) => setLoadError(err.message));
   };
 
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const handleReviewed = () => load();
 

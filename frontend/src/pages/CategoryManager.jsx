@@ -9,7 +9,7 @@ function CategoryManager() {
 
   const load = () => api.getCategories().then(setCategories).catch((err) => setError(err.message));
 
-  useEffect(load, []);
+  useEffect(() => { load(); }, []);
 
   const handleCreate = async (e) => {
     e.preventDefault();
