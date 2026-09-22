@@ -1,22 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Card } from '../components/Card.jsx';
+import { BookingForm } from '../components/BookingForm.jsx';
+import { useAuth } from '../context/AuthContext.jsx';
 import { resolvePhotoUrl, fetchListingById } from '../api/equipmentApi.js';
 
 export function EquipmentDetailPage() {
   const { id } = useParams();
+  const { user, token, isAuthenticated } = useAuth();
   const [listing, setListing] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  useEffect(() => {
+  function loadListing() {
     setLoading(true);
     setError('');
     fetchListingById(id)
       .then(({ equipment }) => setListing(equipment))
       .catch((err) => setError(err.message || 'Listing not found.'))
       .finally(() => setLoading(false));
-  }, [id]);
+  }
+
+  useEffect(loadListing, [id]);
 
   if (loading) return <div className="page"><p className="muted">Loading…</p></div>;
   if (error) {
@@ -29,6 +34,7 @@ export function EquipmentDetailPage() {
   }
 
   const photoUrl = resolvePhotoUrl(listing.photoUrl);
+  const isOwnListing = user && listing.seller === user.id;
 
   return (
     <div className="page">
@@ -44,12 +50,30 @@ export function EquipmentDetailPage() {
           {listing.category ? ` · ${listing.category}` : ''}
         </p>
         <p>{listing.description}</p>
-        <div className="equipment-detail__note">
+      </Card>
+
+      <Card title={listing.listingType === 'rent' ? 'Request to rent' : 'Purchase this item'} className="card--form">
+        {listing.status !== 'approved' && (
+          <p className="muted">This listing isn't currently available for booking.</p>
+        )}
+
+        {listing.status === 'approved' && isOwnListing && (
+          <p className="muted">This is your own listing.</p>
+        )}
+
+        {listing.status === 'approved' && !isOwnListing && !isAuthenticated && (
           <p className="muted">
-            Booking &amp; purchase aren't built yet — that's the next phase. For now this page
-            just proves the public catalogue and listing detail view work end to end.
+            <Link to="/login">Log in</Link> as a Renter/Buyer to book or purchase this item.
           </p>
-        </div>
+        )}
+
+        {listing.status === 'approved' && !isOwnListing && isAuthenticated && user.role !== 'renter' && (
+          <p className="muted">Only Renter/Buyer accounts can book or purchase equipment.</p>
+        )}
+
+        {listing.status === 'approved' && !isOwnListing && isAuthenticated && user.role === 'renter' && (
+          <BookingForm listing={listing} token={token} onSuccess={loadListing} />
+        )}
       </Card>
     </div>
   );
