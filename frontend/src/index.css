@@ -611,3 +611,16 @@ main {
   font-weight: 600;
   margin-top: 8px;
 }
+
+.listing-type-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  margin-left: 6px;
+}
+
+.listing-type-sale { background-color: #fef3c7; color: #92400e; }
+.listing-type-rent { background-color: #e0f2fe; color: #075985; }

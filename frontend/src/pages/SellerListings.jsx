@@ -33,7 +33,8 @@ function ListingEditor({ listing, categories, onSaved }) {
     description: listing?.description.value || '',
     price: listing?.price.value ?? '',
     category: listing?.category.value?._id || listing?.category.value || '',
-    images: listing?.images.value || []
+    images: listing?.images.value || [],
+    listingType: listing?.listingType.value || ''
   });
   const [imageError, setImageError] = useState('');
   const [error, setError] = useState('');
@@ -78,7 +79,8 @@ function ListingEditor({ listing, categories, onSaved }) {
         description: form.description,
         price: Number(form.price),
         category: form.category,
-        images: form.images
+        images: form.images,
+        listingType: form.listingType
       };
 
       if (listing) {
@@ -91,6 +93,7 @@ function ListingEditor({ listing, categories, onSaved }) {
         const currentCategoryId = listing.category.value?._id || listing.category.value;
         if (payload.category !== currentCategoryId) changed.category = payload.category;
         if (JSON.stringify(payload.images) !== JSON.stringify(listing.images.value)) changed.images = payload.images;
+        if (payload.listingType !== listing.listingType.value) changed.listingType = payload.listingType;
 
         if (Object.keys(changed).length === 0) {
           setSubmitting(false);
@@ -117,6 +120,23 @@ function ListingEditor({ listing, categories, onSaved }) {
         <label htmlFor="name">Item name {field('name') && <FieldStatusBadge status={field('name').status} />}</label>
         <input id="name" value={form.name} onChange={(e) => handleChange('name', e.target.value)} required />
         {field('name')?.status === 'rejected' && <p className="field-comment">{field('name').comment}</p>}
+      </div>
+
+      <div className="listing-field">
+        <label htmlFor="listingType">
+          For sale or rent? {field('listingType') && <FieldStatusBadge status={field('listingType').status} />}
+        </label>
+        <select
+          id="listingType"
+          value={form.listingType}
+          onChange={(e) => handleChange('listingType', e.target.value)}
+          required
+        >
+          <option value="">Select one…</option>
+          <option value="sale">For sale</option>
+          <option value="rent">For rent</option>
+        </select>
+        {field('listingType')?.status === 'rejected' && <p className="field-comment">{field('listingType').comment}</p>}
       </div>
 
       <div className="listing-field">

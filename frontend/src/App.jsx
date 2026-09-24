@@ -26,7 +26,8 @@ function listingToCardItem(listing) {
     description: listing.description.value,
     images: listing.images.value || [],
     hireRate: { amount: listing.price.value, period: 'per_item' },
-    depositAmount: 0
+    depositAmount: 0,
+    listingType: listing.listingType.value
   };
 }
 
@@ -78,7 +79,7 @@ function EquipmentCatalogue() {
     ])
       .then(([equipmentItems, listings]) => {
         setEquipment([
-          ...equipmentItems.map((item) => ({ ...item, itemType: 'equipment' })),
+          ...equipmentItems.map((item) => ({ ...item, itemType: 'equipment', listingType: 'rent' })),
           ...listings.map(listingToCardItem)
         ]);
         setLoading(false);

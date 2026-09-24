@@ -8,6 +8,7 @@ function ItemDetailModal({ item, onClose }) {
   const [result, setResult] = useState(null); // { type: 'success' | 'error', message }
 
   const canBuy = isAuthenticated && user.role === 'renter';
+  const isRental = item.listingType === 'rent';
 
   const handleBuy = async () => {
     setPlacing(true);
@@ -19,7 +20,12 @@ function ItemDetailModal({ item, onClose }) {
         name: item.name,
         price: item.hireRate.amount
       });
-      setResult({ type: 'success', message: 'Purchase request sent! The seller will be in touch.' });
+      setResult({
+        type: 'success',
+        message: isRental
+          ? 'Rental request sent! The seller will be in touch.'
+          : 'Purchase request sent! The seller will be in touch.'
+      });
     } catch (err) {
       setResult({ type: 'error', message: err.message });
     } finally {
@@ -44,6 +50,11 @@ function ItemDetailModal({ item, onClose }) {
 
         <h2>{item.name}</h2>
         <p className="category">{item.category}</p>
+        {item.listingType && (
+          <p className={`listing-type-tag listing-type-${item.listingType}`}>
+            {isRental ? 'For rent' : 'For sale'}
+          </p>
+        )}
         <p>{item.description}</p>
         <p className="price">
           ${item.hireRate.amount} / {item.hireRate.period.replace('per_', '')}
@@ -55,7 +66,7 @@ function ItemDetailModal({ item, onClose }) {
 
         {canBuy && !result && (
           <button onClick={handleBuy} disabled={placing}>
-            {placing ? 'Placing order…' : 'Buy'}
+            {placing ? 'Placing order…' : isRental ? 'Rent' : 'Buy'}
           </button>
         )}
 

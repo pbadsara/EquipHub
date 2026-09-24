@@ -29,9 +29,12 @@ async function assertWithinPriceCap(categoryId, price) {
 // starts as 'pending' and the listing enters the admin's review queue.
 router.post('/', requireAuth, requireRole('seller'), async (req, res) => {
   try {
-    const { name, description, price, category, images } = req.body;
-    if (!name || !description || price === undefined || !category) {
-      return res.status(400).json({ error: 'name, description, price and category are required' });
+    const { name, description, price, category, images, listingType } = req.body;
+    if (!name || !description || price === undefined || !category || !listingType) {
+      return res.status(400).json({ error: 'name, description, price, category and listingType are required' });
+    }
+    if (!['sale', 'rent'].includes(listingType)) {
+      return res.status(400).json({ error: 'listingType must be "sale" or "rent"' });
     }
 
     await assertWithinPriceCap(category, price);
@@ -42,7 +45,8 @@ router.post('/', requireAuth, requireRole('seller'), async (req, res) => {
       description: { value: description },
       price: { value: price },
       category: { value: category },
-      images: { value: images || [] }
+      images: { value: images || [] },
+      listingType: { value: listingType }
     });
 
     res.status(201).json(listing);

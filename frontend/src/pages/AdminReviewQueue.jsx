@@ -6,60 +6,76 @@ const FIELDS = [
   { key: 'description', label: 'Description' },
   { key: 'category', label: 'Category' },
   { key: 'price', label: 'Price' },
-  { key: 'images', label: 'Images' }
+  { key: 'images', label: 'Images' },
+  { key: 'listingType', label: 'For sale or rent' }
 ];
+
+const STATUS_LABEL = {
+  pending: 'Pending',
+  approved: 'Approved',
+  rejected: 'Rejected'
+};
 
 function fieldDisplayValue(listing, key) {
   const value = listing[key].value;
   if (key === 'category') return value?.name ? `${value.name} (cap $${value.maxPrice})` : value;
   if (key === 'price') return `$${value}`;
   if (key === 'images') return Array.isArray(value) && value.length ? value.join(', ') : '(none provided)';
+  if (key === 'listingType') return value === 'sale' ? 'For sale' : value === 'rent' ? 'For rent' : value;
   return value;
 }
 
-// One row per reviewable field: shows the seller's current value, and lets
-// the admin approve or reject it. Rejecting reveals a required comment box —
-// the review can't be submitted for that field until a reason is entered.
+// One row per reviewable field: shows the seller's current value and its
+// status. A field that's already approved is read-only — it was decided on
+// a previous round and doesn't need the admin to act on it again. Only
+// fields still pending (freshly submitted/edited) or rejected show the
+// approve/reject controls. Rejecting reveals a required comment box — the
+// review can't be submitted for that field until a reason is entered.
 function ReviewFieldRow({ label, fieldKey, listing, decision, onDecide }) {
   const current = listing[fieldKey];
-  const alreadyApproved = current.status === 'approved';
 
   return (
     <div className="review-field-row">
       <div className="review-field-header">
         <strong>{label}</strong>
-        {alreadyApproved && <span className="field-badge field-badge-approved">Already approved</span>}
+        <span className={`field-badge field-badge-${current.status}`}>{STATUS_LABEL[current.status]}</span>
       </div>
       <p className="review-field-value">{fieldDisplayValue(listing, fieldKey)}</p>
 
-      <div className="review-field-actions">
-        <label>
-          <input
-            type="radio"
-            name={`${listing._id}-${fieldKey}`}
-            checked={decision?.status === 'approved'}
-            onChange={() => onDecide(fieldKey, { status: 'approved', comment: '' })}
-          />
-          Approve
-        </label>
-        <label>
-          <input
-            type="radio"
-            name={`${listing._id}-${fieldKey}`}
-            checked={decision?.status === 'rejected'}
-            onChange={() => onDecide(fieldKey, { status: 'rejected', comment: decision?.comment || '' })}
-          />
-          Reject
-        </label>
-      </div>
+      {current.status === 'approved' ? (
+        <p className="field-hint">Approved on a previous round — no action needed.</p>
+      ) : (
+        <>
+          <div className="review-field-actions">
+            <label>
+              <input
+                type="radio"
+                name={`${listing._id}-${fieldKey}`}
+                checked={decision?.status === 'approved'}
+                onChange={() => onDecide(fieldKey, { status: 'approved', comment: '' })}
+              />
+              Approve
+            </label>
+            <label>
+              <input
+                type="radio"
+                name={`${listing._id}-${fieldKey}`}
+                checked={decision?.status === 'rejected'}
+                onChange={() => onDecide(fieldKey, { status: 'rejected', comment: decision?.comment || '' })}
+              />
+              Reject
+            </label>
+          </div>
 
-      {decision?.status === 'rejected' && (
-        <textarea
-          className="review-comment-box"
-          placeholder="Explain what needs to change (required)"
-          value={decision.comment}
-          onChange={(e) => onDecide(fieldKey, { status: 'rejected', comment: e.target.value })}
-        />
+          {decision?.status === 'rejected' && (
+            <textarea
+              className="review-comment-box"
+              placeholder="Explain what needs to change (required)"
+              value={decision.comment}
+              onChange={(e) => onDecide(fieldKey, { status: 'rejected', comment: e.target.value })}
+            />
+          )}
+        </>
       )}
     </div>
   );

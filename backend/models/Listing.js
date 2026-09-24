@@ -15,7 +15,7 @@ function reviewField(valueSchema) {
 
 // The set of fields the review workflow applies to. Routes iterate this
 // list, so adding a new reviewable field later means changing it in one place.
-const REVIEWABLE_FIELDS = ['name', 'description', 'price', 'category', 'images'];
+const REVIEWABLE_FIELDS = ['name', 'description', 'price', 'category', 'images', 'listingType'];
 
 const listingSchema = new mongoose.Schema({
   seller: {
@@ -29,6 +29,8 @@ const listingSchema = new mongoose.Schema({
   price: reviewField({ type: Number, required: true, min: 0 }),
   category: reviewField({ type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true }),
   images: reviewField({ type: [String], default: [] }),
+  // Whether the seller is offering the item for sale or for hire.
+  listingType: reviewField({ type: String, enum: ['sale', 'rent'], required: true }),
 
   // Derived from the five field statuses above on every save — see
   // recomputeOverallStatus(). Stored (not a virtual) so it's queryable,

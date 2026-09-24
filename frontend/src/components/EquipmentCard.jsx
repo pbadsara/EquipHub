@@ -24,6 +24,11 @@ function EquipmentCard({ item, onClick }) {
       </div>
       <h3>{item.name}</h3>
       <p className="category">{item.category}</p>
+      {item.listingType && (
+        <p className={`listing-type-tag listing-type-${item.listingType}`}>
+          {item.listingType === 'sale' ? 'For sale' : 'For rent'}
+        </p>
+      )}
       <p>{item.description}</p>
       <p className="price">
         ${item.hireRate.amount} / {item.hireRate.period.replace('per_', '')}
