@@ -28,8 +28,19 @@ export const api = {
   getReviewQueue: () => request('/listings/review-queue'),
   getApprovedListings: () => request('/listings'),
 
-  createOrder: (body) => request('/orders', { method: 'POST', body: JSON.stringify(body) }),
   getBookedDates: (itemType, itemId) => request(`/orders/booked-dates/${itemType}/${itemId}`),
   getSellerActivityHistory: () => request('/orders/mine-as-seller'),
-  getAdminActivityHistory: () => request('/orders/all')
+  getAdminActivityHistory: () => request('/orders/all'),
+  getMyOrders: () => request('/orders/mine-as-buyer'),
+
+  forgotPassword: (email) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ email }) }),
+  resetPassword: (token, password) => request('/auth/reset-password', { method: 'POST', body: JSON.stringify({ token, password }) }),
+
+  uploadImage: (dataUrl) => request('/uploads/image', { method: 'POST', body: JSON.stringify({ image: dataUrl }) }),
+
+  createCheckoutSession: (body) => request('/payments/create-checkout-session', { method: 'POST', body: JSON.stringify(body) }),
+  confirmPayment: (sessionId) => request('/payments/confirm', { method: 'POST', body: JSON.stringify({ sessionId }) }),
+
+  createReview: (body) => request('/reviews', { method: 'POST', body: JSON.stringify(body) }),
+  getMyReviews: () => request('/reviews/mine')
 };

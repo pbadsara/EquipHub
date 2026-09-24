@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
 import ActivityHistoryTable from '../components/ActivityHistoryTable';
+import PageHeader from '../components/PageHeader';
+import { SkeletonStatRow, SkeletonTable } from '../components/Skeleton';
+import { ClockIcon } from '../components/icons';
 
 function AdminActivityHistory() {
   const [orders, setOrders] = useState([]);
@@ -16,10 +19,14 @@ function AdminActivityHistory() {
 
   return (
     <div className="dashboard-placeholder">
-      <h1>Activity History</h1>
-      <p className="auth-subtitle">Every sale and rental across all sellers.</p>
-      {loading && <p>Loading…</p>}
+      <PageHeader icon={<ClockIcon />} title="Activity History" subtitle="Every sale and rental across all sellers." />
       {loadError && <p className="auth-error">{loadError}</p>}
+      {loading && (
+        <>
+          <SkeletonStatRow />
+          <SkeletonTable columns={6} />
+        </>
+      )}
       {!loading && !loadError && <ActivityHistoryTable orders={orders} showSeller />}
     </div>
   );

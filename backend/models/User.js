@@ -29,6 +29,18 @@ const userSchema = new mongoose.Schema({
   isActive: {
     type: Boolean,
     default: true
+  },
+  // Set only while a password-reset link is outstanding. The token itself
+  // is never stored — only its hash — so a database leak alone can't be
+  // used to reset anyone's password; the raw token only ever exists in the
+  // emailed link, and expires after an hour either way.
+  resetPasswordTokenHash: {
+    type: String,
+    default: null
+  },
+  resetPasswordExpires: {
+    type: Date,
+    default: null
   }
 }, { timestamps: true });
 
@@ -46,6 +58,8 @@ userSchema.methods.comparePassword = function (candidatePassword) {
 userSchema.methods.toJSON = function () {
   const obj = this.toObject();
   delete obj.passwordHash;
+  delete obj.resetPasswordTokenHash;
+  delete obj.resetPasswordExpires;
   return obj;
 };
 

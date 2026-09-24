@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useToast } from '../context/ToastContext';
+import PageHeader from '../components/PageHeader';
+import StatCard from '../components/StatCard';
+import EmptyState from '../components/EmptyState';
+import { SkeletonForm, SkeletonStatRow } from '../components/Skeleton';
+import { ClipboardCheckIcon } from '../components/icons';
 
 const FIELDS = [
   { key: 'name', label: 'Item name' },
@@ -82,6 +88,7 @@ function ReviewFieldRow({ label, fieldKey, listing, decision, onDecide }) {
 }
 
 function ListingReviewCard({ listing, onReviewed }) {
+  const { showToast } = useToast();
   // decisions: { [fieldKey]: { status, comment } } — only fields the admin
   // has actually made a choice on this round; fields left blank aren't sent.
   const [decisions, setDecisions] = useState({});
@@ -107,6 +114,7 @@ function ListingReviewCard({ listing, onReviewed }) {
     try {
       const updated = await api.reviewListing(listing._id, decisions);
       onReviewed(updated);
+      showToast('Review decisions submitted');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -139,25 +147,88 @@ function ListingReviewCard({ listing, onReviewed }) {
   );
 }
 
+const SORT_OPTIONS = [
+  { value: 'oldest', label: 'Oldest request first' },
+  { value: 'newest', label: 'Newest request first' },
+  { value: 'rent', label: 'Items for rent first' },
+  { value: 'sale', label: 'Items for sale first' }
+];
+
+// All four options are stable relative to submission time — "items for
+// rent/sale first" just moves the matching type to the front instead of
+// scrambling the rest of the order, so switching sorts doesn't reshuffle
+// listings the admin wasn't trying to move.
+function sortQueue(queue, sortBy) {
+  const byOldest = (a, b) => new Date(a.createdAt) - new Date(b.createdAt);
+  const sorted = [...queue].sort(byOldest);
+
+  if (sortBy === 'newest') return sorted.reverse();
+  if (sortBy === 'rent' || sortBy === 'sale') {
+    return sorted.sort((a, b) => {
+      const aMatch = a.listingType.value === sortBy ? 0 : 1;
+      const bMatch = b.listingType.value === sortBy ? 0 : 1;
+      return aMatch - bMatch;
+    });
+  }
+  return sorted; // 'oldest'
+}
+
 function AdminReviewQueue() {
   const [queue, setQueue] = useState([]);
   const [loadError, setLoadError] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sortBy, setSortBy] = useState('oldest');
 
   const load = () => {
-    api.getReviewQueue().then(setQueue).catch((err) => setLoadError(err.message));
+    api.getReviewQueue().then(setQueue).catch((err) => setLoadError(err.message)).finally(() => setLoading(false));
   };
 
   useEffect(() => { load(); }, []);
 
   const handleReviewed = () => load();
 
+  const sortedQueue = sortQueue(queue, sortBy);
+
   return (
     <div className="dashboard-placeholder">
-      <h1>Listings Awaiting Review</h1>
-      {loadError && <p className="auth-error">{loadError}</p>}
-      {queue.length === 0 && !loadError && <p>Nothing waiting on you right now.</p>}
+      <PageHeader
+        icon={<ClipboardCheckIcon />}
+        title="Listings Awaiting Review"
+        subtitle="Approve or reject each field before a listing goes live."
+      />
 
-      {queue.map((listing) => (
+      {loading ? (
+        <SkeletonStatRow count={1} />
+      ) : (
+        <div className="stat-row">
+          <StatCard label="Awaiting your review" value={queue.length} tone={queue.length > 0 ? 'submitted' : undefined} />
+        </div>
+      )}
+
+      {loadError && <p className="auth-error">{loadError}</p>}
+
+      {loading && <SkeletonForm />}
+
+      {!loading && queue.length === 0 && !loadError && (
+        <EmptyState
+          icon={<ClipboardCheckIcon />}
+          message="Nothing waiting on you right now."
+          hint="Submitted listings will show up here for review."
+        />
+      )}
+
+      {!loading && queue.length > 0 && (
+        <div className="sort-bar">
+          <label htmlFor="reviewSort">Sort by</label>
+          <select id="reviewSort" value={sortBy} onChange={(e) => setSortBy(e.target.value)}>
+            {SORT_OPTIONS.map((opt) => (
+              <option key={opt.value} value={opt.value}>{opt.label}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {!loading && sortedQueue.map((listing) => (
         <ListingReviewCard key={listing._id} listing={listing} onReviewed={handleReviewed} />
       ))}
     </div>

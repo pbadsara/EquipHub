@@ -1,5 +1,11 @@
 import { useState, useEffect } from 'react';
 import { api } from '../api';
+import { useToast } from '../context/ToastContext';
+import PageHeader from '../components/PageHeader';
+import StatCard from '../components/StatCard';
+import EmptyState from '../components/EmptyState';
+import { SkeletonForm, SkeletonTile, SkeletonStatRow } from '../components/Skeleton';
+import { ListIcon, PlusIcon, ImageIcon, UploadIcon } from '../components/icons';
 
 const STATUS_LABEL = {
   pending: 'Awaiting review',
@@ -7,10 +13,24 @@ const STATUS_LABEL = {
   rejected: 'Changes requested'
 };
 
+const LISTING_TILE_STATUS_LABEL = {
+  active: 'Active',
+  sold: 'Sold',
+  rented: 'Rented'
+};
+
+// A listing's at-a-glance tile status: sold takes priority (it's gone from
+// the catalogue either way); a rental with at least one booking is flagged
+// "Rented" so the seller can see it's earned something; everything else
+// still live and unbooked is just "Active".
+function listingTileStatus(listing, bookedListingIds) {
+  if (listing.sold) return 'sold';
+  if (listing.listingType.value === 'rent' && bookedListingIds.has(listing._id)) return 'rented';
+  return 'active';
+}
+
 const MAX_IMAGES = 5;
-const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per image — keeps documents small since
-// images are stored as base64 data URLs directly on the listing (no file storage
-// service is wired up yet; fine for a demo/course project, not for production scale).
+const MAX_FILE_SIZE = 2 * 1024 * 1024; // 2MB per image, checked before it's ever uploaded
 
 function FieldStatusBadge({ status }) {
   return <span className={`field-badge field-badge-${status}`}>{STATUS_LABEL[status]}</span>;
@@ -28,6 +48,7 @@ function readFileAsDataUrl(file) {
 // One listing, shown as an editable field per row. Works for both a brand
 // new (unsaved) listing and an existing one being edited after admin feedback.
 function ListingEditor({ listing, categories, onSaved }) {
+  const { showToast } = useToast();
   const [form, setForm] = useState({
     name: listing?.name.value || '',
     description: listing?.description.value || '',
@@ -37,15 +58,16 @@ function ListingEditor({ listing, categories, onSaved }) {
     listingType: listing?.listingType.value || ''
   });
   const [imageError, setImageError] = useState('');
+  const [isDragging, setIsDragging] = useState(false);
+  const [uploadingImages, setUploadingImages] = useState(false);
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const handleChange = (key, value) => setForm((f) => ({ ...f, [key]: value }));
 
-  const handleFilesSelected = async (e) => {
-    const files = Array.from(e.target.files || []);
-    e.target.value = ''; // allow picking the same file again later
+  const processFiles = async (files) => {
     setImageError('');
+    if (files.length === 0) return;
 
     if (form.images.length + files.length > MAX_IMAGES) {
       setImageError(`You can attach at most ${MAX_IMAGES} images per listing.`);
@@ -57,12 +79,33 @@ function ListingEditor({ listing, categories, onSaved }) {
       return;
     }
 
+    setUploadingImages(true);
     try {
+      // Read locally into a data URL first, then hand that to Cloudinary —
+      // the listing only ever ends up storing the hosted https URL it gets
+      // back, not the image bytes themselves.
       const dataUrls = await Promise.all(files.map(readFileAsDataUrl));
-      setForm((f) => ({ ...f, images: [...f.images, ...dataUrls] }));
-    } catch {
-      setImageError('Could not read one of those files — please try again.');
+      const uploaded = await Promise.all(dataUrls.map((dataUrl) => api.uploadImage(dataUrl)));
+      setForm((f) => ({ ...f, images: [...f.images, ...uploaded.map((u) => u.url)] }));
+    } catch (err) {
+      setImageError(err.message || 'Could not upload one of those files — please try again.');
+    } finally {
+      setUploadingImages(false);
     }
+  };
+
+  const handleFilesSelected = (e) => {
+    const files = Array.from(e.target.files || []);
+    e.target.value = ''; // allow picking the same file again later
+    processFiles(files);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragging(false);
+    if (uploadingImages) return;
+    const files = Array.from(e.dataTransfer.files || []).filter((f) => f.type.startsWith('image/'));
+    processFiles(files);
   };
 
   const removeImage = (index) => {
@@ -101,9 +144,11 @@ function ListingEditor({ listing, categories, onSaved }) {
         }
         const updated = await api.updateListing(listing._id, changed);
         onSaved(updated);
+        showToast('Changes saved');
       } else {
         const created = await api.createListing(payload);
         onSaved(created);
+        showToast('Listing submitted for review');
       }
     } catch (err) {
       setError(err.message);
@@ -201,7 +246,28 @@ function ListingEditor({ listing, categories, onSaved }) {
         )}
 
         {form.images.length < MAX_IMAGES && (
-          <input id="images" type="file" accept="image/*" multiple onChange={handleFilesSelected} />
+          <label
+            className={`dropzone ${isDragging ? 'dropzone-active' : ''} ${uploadingImages ? 'dropzone-uploading' : ''}`}
+            onDragOver={(e) => { if (!uploadingImages) { e.preventDefault(); setIsDragging(true); } }}
+            onDragLeave={() => setIsDragging(false)}
+            onDrop={handleDrop}
+          >
+            <UploadIcon />
+            {uploadingImages ? (
+              <span>Uploading…</span>
+            ) : (
+              <span>Drag photos here, or <strong>click to browse</strong></span>
+            )}
+            <input
+              id="images"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleFilesSelected}
+              disabled={uploadingImages}
+              hidden
+            />
+          </label>
         )}
         <p className="field-hint">Up to {MAX_IMAGES} photos, 2MB each.</p>
 
@@ -241,26 +307,52 @@ function ListingCard({ listing, categories, onSaved }) {
   );
 }
 
+// A small clickable summary card for the Listing History tab — just the
+// photo, name and a status tag. Clicking it pops the full ListingCard open
+// in a modal instead of taking up space inline, since a live listing is
+// mostly there for reference, not day-to-day editing.
+function ListingTile({ listing, status, onClick }) {
+  return (
+    <button type="button" className="listing-tile" onClick={onClick}>
+      <div className="listing-tile-image">
+        {listing.images.value.length > 0 ? (
+          <img src={listing.images.value[0]} alt={listing.name.value} />
+        ) : (
+          <ImageIcon />
+        )}
+      </div>
+      <p className="listing-tile-name">{listing.name.value}</p>
+      <span className={`overall-badge overall-badge-${status}`}>{LISTING_TILE_STATUS_LABEL[status]}</span>
+    </button>
+  );
+}
+
 function SellerListings() {
   const [listings, setListings] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [bookedListingIds, setBookedListingIds] = useState(new Set());
   const [creating, setCreating] = useState(false);
   const [loadError, setLoadError] = useState('');
   const [tab, setTab] = useState('active'); // 'active' | 'history'
+  const [expandedListing, setExpandedListing] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const loadAll = () => {
-    Promise.all([api.getMyListings(), api.getCategories()])
-      .then(([l, c]) => {
+    Promise.all([api.getMyListings(), api.getCategories(), api.getSellerActivityHistory()])
+      .then(([l, c, orders]) => {
         setListings(l);
         setCategories(c);
+        setBookedListingIds(new Set(orders.map((o) => o.itemId)));
       })
-      .catch((err) => setLoadError(err.message));
+      .catch((err) => setLoadError(err.message))
+      .finally(() => setLoading(false));
   };
 
   useEffect(() => { loadAll(); }, []);
 
-  const handleSaved = () => {
+  const handleSaved = (updated) => {
     setCreating(false);
+    setExpandedListing((current) => (current ? updated : current));
     loadAll();
   };
 
@@ -270,10 +362,30 @@ function SellerListings() {
   // with drafts and listings still waiting on admin feedback.
   const activeListings = listings.filter((l) => l.overallStatus !== 'approved');
   const historyListings = listings.filter((l) => l.overallStatus === 'approved');
+  const historyStatuses = historyListings.map((l) => listingTileStatus(l, bookedListingIds));
+  const liveCount = historyStatuses.filter((s) => s === 'active').length;
+  const soldCount = historyStatuses.filter((s) => s === 'sold').length;
+  const rentedCount = historyStatuses.filter((s) => s === 'rented').length;
 
   return (
     <div className="dashboard-placeholder">
-      <h1>My Listings</h1>
+      <PageHeader
+        icon={<ListIcon />}
+        title="My Listings"
+        subtitle="Manage drafts, track admin feedback, and see what's live."
+      />
+
+      {loading ? (
+        <SkeletonStatRow count={4} />
+      ) : (
+        <div className="stat-row">
+          <StatCard label="Needs attention" value={activeListings.length} />
+          <StatCard label="Live" value={liveCount} tone="active" />
+          <StatCard label="Sold" value={soldCount} tone="sold" />
+          <StatCard label="Rented" value={rentedCount} tone="rented" />
+        </div>
+      )}
+
       {loadError && <p className="auth-error">{loadError}</p>}
 
       <div className="tab-bar">
@@ -294,8 +406,8 @@ function SellerListings() {
       {tab === 'active' && (
         <>
           {!creating && (
-            <button onClick={() => setCreating(true)} style={{ marginBottom: 24 }}>
-              + New listing
+            <button className="button-with-icon" onClick={() => setCreating(true)} style={{ marginBottom: 24 }}>
+              <PlusIcon /> New listing
             </button>
           )}
 
@@ -306,9 +418,17 @@ function SellerListings() {
             </div>
           )}
 
-          {activeListings.length === 0 && !creating && <p>Nothing needs your attention right now.</p>}
+          {loading && <SkeletonForm />}
 
-          {activeListings.map((listing) => (
+          {!loading && activeListings.length === 0 && !creating && (
+            <EmptyState
+              icon={<ListIcon />}
+              message="Nothing needs your attention right now."
+              hint="New listings and admin feedback will show up here."
+            />
+          )}
+
+          {!loading && activeListings.map((listing) => (
             <ListingCard key={listing._id} listing={listing} categories={categories} onSaved={handleSaved} />
           ))}
         </>
@@ -316,12 +436,40 @@ function SellerListings() {
 
       {tab === 'history' && (
         <>
-          {historyListings.length === 0 && <p>No approved listings yet.</p>}
+          {loading && (
+            <div className="listing-tile-grid">
+              {Array.from({ length: 4 }).map((_, i) => <SkeletonTile key={i} />)}
+            </div>
+          )}
 
-          {historyListings.map((listing) => (
-            <ListingCard key={listing._id} listing={listing} categories={categories} onSaved={handleSaved} />
-          ))}
+          {!loading && historyListings.length === 0 && (
+            <EmptyState
+              icon={<ListIcon />}
+              message="No approved listings yet."
+              hint="Listings show up here once every field is approved."
+            />
+          )}
+
+          <div className="listing-tile-grid">
+            {!loading && historyListings.map((listing) => (
+              <ListingTile
+                key={listing._id}
+                listing={listing}
+                status={listingTileStatus(listing, bookedListingIds)}
+                onClick={() => setExpandedListing(listing)}
+              />
+            ))}
+          </div>
         </>
+      )}
+
+      {expandedListing && (
+        <div className="modal-overlay" onClick={() => setExpandedListing(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <button className="modal-close" onClick={() => setExpandedListing(null)} aria-label="Close">×</button>
+            <ListingCard listing={expandedListing} categories={categories} onSaved={handleSaved} />
+          </div>
+        </div>
       )}
     </div>
   );

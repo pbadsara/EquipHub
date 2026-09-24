@@ -7,7 +7,10 @@ const app = express();
 
 // CORS is needed since the React frontend runs on a different port during dev
 app.use(cors());
-app.use(express.json());
+// Raised from Express's 100kb default — a base64-encoded photo (up to the
+// 2MB-per-image cap enforced on the frontend) comes in well over that once
+// base64's ~33% overhead and the JSON wrapper are counted.
+app.use(express.json({ limit: '10mb' }));
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/equiphub';
 
@@ -26,7 +29,9 @@ app.use('/api/auth', require('./routes/auth'));
 app.use('/api/categories', require('./routes/categories'));
 app.use('/api/listings', require('./routes/listings'));
 app.use('/api/orders', require('./routes/orders'));
-// app.use('/api/payments', require('./routes/payments'));
+app.use('/api/uploads', require('./routes/uploads'));
+app.use('/api/payments', require('./routes/payments'));
+app.use('/api/reviews', require('./routes/reviews'));
 
 const PORT = process.env.PORT || 5050;
 app.listen(PORT, () => {

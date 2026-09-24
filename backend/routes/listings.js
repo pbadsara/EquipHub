@@ -2,7 +2,25 @@ const express = require('express');
 const router = express.Router();
 const Listing = require('../models/Listing');
 const Category = require('../models/Category');
+const Review = require('../models/Review');
 const { requireAuth, requireRole } = require('../middleware/auth');
+
+// Attaches { average, count } rating info to each listing, computed live
+// from Review documents rather than a stored running total — simplest
+// option at this scale, and always exactly correct since there's nothing
+// to keep in sync.
+async function attachRatings(listings) {
+  const ids = listings.map((l) => l._id);
+  const stats = await Review.aggregate([
+    { $match: { listing: { $in: ids } } },
+    { $group: { _id: '$listing', average: { $avg: '$rating' }, count: { $sum: 1 } } }
+  ]);
+  const byId = new Map(stats.map((s) => [String(s._id), { average: Math.round(s.average * 10) / 10, count: s.count }]));
+  return listings.map((l) => ({
+    ...(l.toObject ? l.toObject() : l),
+    rating: byId.get(String(l._id)) || { average: 0, count: 0 }
+  }));
+}
 
 const REVIEWABLE_FIELDS = Listing.REVIEWABLE_FIELDS; // ['name','description','price','category','images']
 
@@ -158,7 +176,7 @@ router.get('/', async (req, res) => {
   const listings = await Listing.find({ overallStatus: 'approved', sold: { $ne: true } })
     .populate('category.value', 'name maxPrice')
     .sort('-updatedAt');
-  res.json(listings);
+  res.json(await attachRatings(listings));
 });
 
 module.exports = router;

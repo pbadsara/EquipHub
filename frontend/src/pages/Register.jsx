@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { StoreIcon, UserIcon, ShieldCheckIcon } from '../components/icons';
 
-const ROLE_HOME = { admin: '/admin/categories', seller: '/seller/listings', renter: '/' };
+const ROLE_HOME = { admin: '/admin/categories', seller: '/seller/listings', renter: '/browse' };
 
 function Register() {
   const [name, setName] = useState('');
@@ -31,32 +32,47 @@ function Register() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <h1>EquipHub</h1>
-        <p className="auth-subtitle">Create your account</p>
+      <div className="auth-split">
+        <div className="auth-split-brand">
+          <Link to="/" className="auth-split-logo">EquipHub</Link>
+          <h2>Join the community</h2>
+          <p>Create a free account to start browsing, renting, buying or selling equipment.</p>
+          <ul className="auth-split-points">
+            <li><UserIcon /> Buy or rent from local sellers</li>
+            <li><StoreIcon /> List your own gear in minutes</li>
+            <li><ShieldCheckIcon /> Every listing reviewed before it's live</li>
+          </ul>
+        </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <label htmlFor="name">Full name</label>
-          <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
+        <div className="auth-split-form">
+          <div className="auth-card">
+            <h1>Create your account</h1>
+            <p className="auth-subtitle">It only takes a minute</p>
 
-          <label htmlFor="email">Email</label>
-          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
+            <form onSubmit={handleSubmit} noValidate>
+              <label htmlFor="name">Full name</label>
+              <input id="name" type="text" value={name} onChange={(e) => setName(e.target.value)} autoComplete="name" required />
 
-          <label htmlFor="password">Password</label>
-          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={8} required />
+              <label htmlFor="email">Email</label>
+              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
 
-          <label htmlFor="role">I want to</label>
-          <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
-            <option value="renter">Browse &amp; rent/buy equipment</option>
-            <option value="seller">List my own equipment</option>
-          </select>
+              <label htmlFor="password">Password</label>
+              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="new-password" minLength={8} required />
 
-          {error && <p className="auth-error">{error}</p>}
+              <label htmlFor="role">I want to</label>
+              <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="renter">Browse &amp; rent/buy equipment</option>
+                <option value="seller">List my own equipment</option>
+              </select>
 
-          <button type="submit" disabled={submitting}>{submitting ? 'Creating account…' : 'Sign Up'}</button>
-        </form>
+              {error && <p className="auth-error">{error}</p>}
 
-        <p className="auth-switch">Already have an account? <Link to="/login">Log in</Link></p>
+              <button type="submit" disabled={submitting}>{submitting ? 'Creating account…' : 'Sign Up'}</button>
+            </form>
+
+            <p className="auth-switch">Already have an account? <Link to="/login">Log in</Link></p>
+          </div>
+        </div>
       </div>
     </div>
   );

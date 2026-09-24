@@ -2,6 +2,9 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../api';
 import RentalCalendar from './RentalCalendar';
+import { ImageIcon } from './icons';
+import { getCategoryColor } from '../utils/categoryColor';
+import StarRating from './StarRating';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -31,6 +34,7 @@ function ItemDetailModal({ item, onClose }) {
 
   const canBuy = isAuthenticated && user.role === 'renter';
   const isRental = item.listingType === 'rent';
+  const categoryColor = getCategoryColor(item.category);
   // Date-range booking only applies to rental seller listings — the legacy
   // Equipment catalogue has its own per_day/per_hour/per_weekend rates and
   // isn't part of this booking system.
@@ -58,22 +62,18 @@ function ItemDetailModal({ item, onClose }) {
     setPlacing(true);
     setResult(null);
     try {
-      await api.createOrder({
+      const { url } = await api.createCheckoutSession({
         itemType: item.itemType,
         itemId: item._id,
         ...(needsCalendar
           ? { startDate: toDateString(range.start), endDate: toDateString(range.end) }
           : {})
       });
-      setResult({
-        type: 'success',
-        message: isRental
-          ? 'Rental request sent! The seller will be in touch.'
-          : 'Purchase request sent! The seller will be in touch.'
-      });
+      // Full-page redirect to Stripe's hosted checkout — no Stripe.js needed
+      // on our side. Stripe sends them back to /order-success once they pay.
+      window.location.href = url;
     } catch (err) {
       setResult({ type: 'error', message: err.message });
-    } finally {
       setPlacing(false);
     }
   };
@@ -90,11 +90,20 @@ function ItemDetailModal({ item, onClose }) {
             ))}
           </div>
         ) : (
-          <div className="equipment-image-placeholder"><span>No image</span></div>
+          <div className="equipment-image-placeholder">
+            <span className="image-placeholder-empty"><ImageIcon /> No image</span>
+          </div>
         )}
 
         <h2>{item.name}</h2>
-        <p className="category">{item.category}</p>
+        {item.rating?.count > 0 && (
+          <p className="rating-summary">
+            <StarRating value={item.rating.average} size={16} /> {item.rating.average} ({item.rating.count} review{item.rating.count === 1 ? '' : 's'})
+          </p>
+        )}
+        <p className="category" style={{ backgroundColor: categoryColor.bg, color: categoryColor.text }}>
+          {item.category}
+        </p>
         {item.listingType && (
           <p className={`listing-type-tag listing-type-${item.listingType}`}>
             {isRental ? 'For rent' : 'For sale'}
@@ -130,7 +139,7 @@ function ItemDetailModal({ item, onClose }) {
 
         {canBuy && !result && (
           <button className="modal-buy-button" onClick={handleBuy} disabled={placing || !canSubmit}>
-            {placing ? 'Placing order…' : isRental ? (needsCalendar && days ? `Rent for $${total}` : 'Rent') : 'Buy'}
+            {placing ? 'Redirecting to checkout…' : isRental ? (needsCalendar && days ? `Rent for $${total}` : 'Rent') : 'Buy'}
           </button>
         )}
 

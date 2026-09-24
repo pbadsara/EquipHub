@@ -1,4 +1,10 @@
+import { ImageIcon } from './icons';
+import { getCategoryColor } from '../utils/categoryColor';
+import StarRating from './StarRating';
+
 function EquipmentCard({ item, onClick }) {
+  const categoryColor = getCategoryColor(item.category);
+
   const handleKeyDown = (e) => {
     if (!onClick) return;
     if (e.key === 'Enter' || e.key === ' ') {
@@ -19,11 +25,18 @@ function EquipmentCard({ item, onClick }) {
         {item.images.length > 0 ? (
           <img src={item.images[0]} alt={item.name} />
         ) : (
-          <span>No image</span>
+          <span className="image-placeholder-empty"><ImageIcon /> No image</span>
         )}
       </div>
       <h3>{item.name}</h3>
-      <p className="category">{item.category}</p>
+      {item.rating?.count > 0 && (
+        <p className="rating-summary">
+          <StarRating value={item.rating.average} size={14} /> {item.rating.average} ({item.rating.count})
+        </p>
+      )}
+      <p className="category" style={{ backgroundColor: categoryColor.bg, color: categoryColor.text }}>
+        {item.category}
+      </p>
       {item.listingType && (
         <p className={`listing-type-tag listing-type-${item.listingType}`}>
           {item.listingType === 'sale' ? 'For sale' : 'For rent'}

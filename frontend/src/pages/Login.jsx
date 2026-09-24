@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ShieldCheckIcon, CalendarIcon, SearchIcon } from '../components/icons';
 
-const ROLE_HOME = { admin: '/admin/categories', seller: '/seller/listings', renter: '/' };
+const ROLE_HOME = { admin: '/admin/categories', seller: '/seller/listings', renter: '/browse' };
 
 function Login() {
   const [email, setEmail] = useState('');
@@ -31,23 +32,39 @@ function Login() {
 
   return (
     <div className="auth-page">
-      <div className="auth-card">
-        <h1>EquipHub</h1>
-        <p className="auth-subtitle">Log in to your account</p>
+      <div className="auth-split">
+        <div className="auth-split-brand">
+          <Link to="/" className="auth-split-logo">EquipHub</Link>
+          <h2>Welcome back</h2>
+          <p>Log in to manage your listings, bookings and orders — all in one place.</p>
+          <ul className="auth-split-points">
+            <li><ShieldCheckIcon /> Reviewed listings you can trust</li>
+            <li><CalendarIcon /> Book exact rental dates</li>
+            <li><SearchIcon /> Track every sale and rental</li>
+          </ul>
+        </div>
 
-        <form onSubmit={handleSubmit} noValidate>
-          <label htmlFor="email">Email</label>
-          <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
+        <div className="auth-split-form">
+          <div className="auth-card">
+            <h1>Log in</h1>
+            <p className="auth-subtitle">Enter your details to continue</p>
 
-          <label htmlFor="password">Password</label>
-          <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+            <form onSubmit={handleSubmit} noValidate>
+              <label htmlFor="email">Email</label>
+              <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
 
-          {error && <p className="auth-error">{error}</p>}
+              <label htmlFor="password">Password</label>
+              <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />
+              <p className="auth-forgot"><Link to="/forgot-password">Forgot password?</Link></p>
 
-          <button type="submit" disabled={submitting}>{submitting ? 'Logging in…' : 'Log In'}</button>
-        </form>
+              {error && <p className="auth-error">{error}</p>}
 
-        <p className="auth-switch">Don&apos;t have an account? <Link to="/register">Sign up</Link></p>
+              <button type="submit" disabled={submitting}>{submitting ? 'Logging in…' : 'Log In'}</button>
+            </form>
+
+            <p className="auth-switch">Don&apos;t have an account? <Link to="/register">Sign up</Link></p>
+          </div>
+        </div>
       </div>
     </div>
   );
