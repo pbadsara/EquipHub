@@ -151,9 +151,11 @@ router.get('/review-queue', requireAuth, requireRole('admin'), async (req, res) 
   res.json(listings);
 });
 
-// GET /api/listings — public catalogue. Approved listings only.
+// GET /api/listings — public catalogue. Approved listings only, minus any
+// 'sale' listing that's already been bought (a 'rent' listing stays listed
+// even once booked — only specific dates become unavailable).
 router.get('/', async (req, res) => {
-  const listings = await Listing.find({ overallStatus: 'approved' })
+  const listings = await Listing.find({ overallStatus: 'approved', sold: { $ne: true } })
     .populate('category.value', 'name maxPrice')
     .sort('-updatedAt');
   res.json(listings);

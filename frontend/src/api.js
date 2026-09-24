@@ -28,5 +28,8 @@ export const api = {
   getReviewQueue: () => request('/listings/review-queue'),
   getApprovedListings: () => request('/listings'),
 
-  createOrder: (body) => request('/orders', { method: 'POST', body: JSON.stringify(body) })
+  createOrder: (body) => request('/orders', { method: 'POST', body: JSON.stringify(body) }),
+  getBookedDates: (itemType, itemId) => request(`/orders/booked-dates/${itemType}/${itemId}`),
+  getSellerActivityHistory: () => request('/orders/mine-as-seller'),
+  getAdminActivityHistory: () => request('/orders/all')
 };

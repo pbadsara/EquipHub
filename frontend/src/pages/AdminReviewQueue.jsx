@@ -19,7 +19,7 @@ const STATUS_LABEL = {
 function fieldDisplayValue(listing, key) {
   const value = listing[key].value;
   if (key === 'category') return value?.name ? `${value.name} (cap $${value.maxPrice})` : value;
-  if (key === 'price') return `$${value}`;
+  if (key === 'price') return listing.listingType.value === 'rent' ? `$${value} / day` : `$${value}`;
   if (key === 'images') return Array.isArray(value) && value.length ? value.join(', ') : '(none provided)';
   if (key === 'listingType') return value === 'sale' ? 'For sale' : value === 'rent' ? 'For rent' : value;
   return value;

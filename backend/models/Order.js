@@ -31,6 +31,20 @@ const orderSchema = new mongoose.Schema({
     type: String,
     enum: ['requested'],
     default: 'requested'
+  },
+  // Only set for a rental booking (a 'listing' whose listingType is 'rent').
+  // Both dates are inclusive — the item is out for the whole of startDate
+  // through the whole of endDate. Used both to price the order (days *
+  // price-per-day) and to block those same days out for later bookings.
+  startDate: {
+    type: Date
+  },
+  endDate: {
+    type: Date
+  },
+  days: {
+    type: Number,
+    min: 1
   }
 }, { timestamps: true });
 

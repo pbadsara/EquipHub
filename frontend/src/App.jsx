@@ -6,7 +6,9 @@ import ProtectedRoute from './components/ProtectedRoute';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import SellerListings from './pages/SellerListings';
+import SellerActivityHistory from './pages/SellerActivityHistory';
 import AdminReviewQueue from './pages/AdminReviewQueue';
+import AdminActivityHistory from './pages/AdminActivityHistory';
 import CategoryManager from './pages/CategoryManager';
 import { useAuth } from './context/AuthContext';
 import { api } from './api';
@@ -25,7 +27,7 @@ function listingToCardItem(listing) {
     category: listing.category.value?.name || '',
     description: listing.description.value,
     images: listing.images.value || [],
-    hireRate: { amount: listing.price.value, period: 'per_item' },
+    hireRate: { amount: listing.price.value, period: listing.listingType.value === 'rent' ? 'per_day' : 'per_item' },
     depositAmount: 0,
     listingType: listing.listingType.value
   };
@@ -43,8 +45,10 @@ function SiteHeader() {
         </div>
         <nav className="header-nav">
           {isAuthenticated && user.role === 'seller' && <Link to="/seller/listings">My Listings</Link>}
+          {isAuthenticated && user.role === 'seller' && <Link to="/seller/activity">Activity History</Link>}
           {isAuthenticated && user.role === 'admin' && <Link to="/admin/review">Review Queue</Link>}
           {isAuthenticated && user.role === 'admin' && <Link to="/admin/categories">Categories</Link>}
+          {isAuthenticated && user.role === 'admin' && <Link to="/admin/activity">Activity History</Link>}
           {isAuthenticated ? (
             <>
               <span className="header-user">Hi, {user.name} ({user.role})</span>
@@ -155,6 +159,14 @@ function App() {
           }
         />
         <Route
+          path="/seller/activity"
+          element={
+            <ProtectedRoute roles={['seller']}>
+              <SellerActivityHistory />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/admin/review"
           element={
             <ProtectedRoute roles={['admin']}>
@@ -167,6 +179,14 @@ function App() {
           element={
             <ProtectedRoute roles={['admin']}>
               <CategoryManager />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/activity"
+          element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminActivityHistory />
             </ProtectedRoute>
           }
         />

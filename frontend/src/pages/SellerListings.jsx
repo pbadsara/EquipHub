@@ -167,7 +167,11 @@ function ListingEditor({ listing, categories, onSaved }) {
       </div>
 
       <div className="listing-field">
-        <label htmlFor="price">Price ($) {field('price') && <FieldStatusBadge status={field('price').status} />}</label>
+        <label htmlFor="price">
+          {form.listingType === 'rent' ? 'Price per day ($)' : 'Price ($)'}
+          {' '}
+          {field('price') && <FieldStatusBadge status={field('price').status} />}
+        </label>
         <input
           id="price"
           type="number"
@@ -214,11 +218,35 @@ function ListingEditor({ listing, categories, onSaved }) {
   );
 }
 
+// A single listing card — the name/status header plus its editor. Shared
+// between the "My Listings" tab (still-in-progress listings) and the
+// "Listing History" tab (already approved and live), since both just
+// render the same listing shape.
+function ListingCard({ listing, categories, onSaved }) {
+  return (
+    <div className="auth-card" style={{ maxWidth: 480, marginBottom: 24 }}>
+      <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        {listing.name.value}
+        <span>
+          {listing.sold && <span className="overall-badge overall-badge-sold">Sold</span>}
+          {' '}
+          <span className={`overall-badge overall-badge-${listing.overallStatus}`}>
+            {listing.overallStatus === 'needs_changes' ? 'Changes requested' : listing.overallStatus}
+          </span>
+        </span>
+      </h2>
+      {listing.sold && <p className="field-hint">Sold — no longer visible in the public catalogue.</p>}
+      <ListingEditor listing={listing} categories={categories} onSaved={onSaved} />
+    </div>
+  );
+}
+
 function SellerListings() {
   const [listings, setListings] = useState([]);
   const [categories, setCategories] = useState([]);
   const [creating, setCreating] = useState(false);
   const [loadError, setLoadError] = useState('');
+  const [tab, setTab] = useState('active'); // 'active' | 'history'
 
   const loadAll = () => {
     Promise.all([api.getMyListings(), api.getCategories()])
@@ -236,35 +264,65 @@ function SellerListings() {
     loadAll();
   };
 
+  // Once a listing is fully approved and live, it moves out of the
+  // day-to-day "My Listings" work queue and into "Listing History" — the
+  // seller can still open and edit it there, it's just no longer mixed in
+  // with drafts and listings still waiting on admin feedback.
+  const activeListings = listings.filter((l) => l.overallStatus !== 'approved');
+  const historyListings = listings.filter((l) => l.overallStatus === 'approved');
+
   return (
     <div className="dashboard-placeholder">
       <h1>My Listings</h1>
       {loadError && <p className="auth-error">{loadError}</p>}
 
-      {!creating && (
-        <button onClick={() => setCreating(true)} style={{ marginBottom: 24 }}>
-          + New listing
+      <div className="tab-bar">
+        <button
+          className={`tab-button ${tab === 'active' ? 'tab-button-active' : ''}`}
+          onClick={() => setTab('active')}
+        >
+          My Listings
         </button>
+        <button
+          className={`tab-button ${tab === 'history' ? 'tab-button-active' : ''}`}
+          onClick={() => setTab('history')}
+        >
+          Listing History
+        </button>
+      </div>
+
+      {tab === 'active' && (
+        <>
+          {!creating && (
+            <button onClick={() => setCreating(true)} style={{ marginBottom: 24 }}>
+              + New listing
+            </button>
+          )}
+
+          {creating && (
+            <div className="auth-card" style={{ maxWidth: 480, marginBottom: 32 }}>
+              <h2>New listing</h2>
+              <ListingEditor categories={categories} onSaved={handleSaved} />
+            </div>
+          )}
+
+          {activeListings.length === 0 && !creating && <p>Nothing needs your attention right now.</p>}
+
+          {activeListings.map((listing) => (
+            <ListingCard key={listing._id} listing={listing} categories={categories} onSaved={handleSaved} />
+          ))}
+        </>
       )}
 
-      {creating && (
-        <div className="auth-card" style={{ maxWidth: 480, marginBottom: 32 }}>
-          <h2>New listing</h2>
-          <ListingEditor categories={categories} onSaved={handleSaved} />
-        </div>
-      )}
+      {tab === 'history' && (
+        <>
+          {historyListings.length === 0 && <p>No approved listings yet.</p>}
 
-      {listings.map((listing) => (
-        <div className="auth-card" key={listing._id} style={{ maxWidth: 480, marginBottom: 24 }}>
-          <h2 style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            {listing.name.value}
-            <span className={`overall-badge overall-badge-${listing.overallStatus}`}>
-              {listing.overallStatus === 'needs_changes' ? 'Changes requested' : listing.overallStatus}
-            </span>
-          </h2>
-          <ListingEditor listing={listing} categories={categories} onSaved={handleSaved} />
-        </div>
-      ))}
+          {historyListings.map((listing) => (
+            <ListingCard key={listing._id} listing={listing} categories={categories} onSaved={handleSaved} />
+          ))}
+        </>
+      )}
     </div>
   );
 }

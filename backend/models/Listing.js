@@ -39,6 +39,15 @@ const listingSchema = new mongoose.Schema({
     type: String,
     enum: ['submitted', 'needs_changes', 'approved'],
     default: 'submitted'
+  },
+
+  // Set once a 'sale' listing has been bought (never used for 'rent'
+  // listings — those stay listed and just block out the booked dates).
+  // A sold listing stays visible to its seller (Listing History, Activity
+  // History) but drops out of the public catalogue.
+  sold: {
+    type: Boolean,
+    default: false
   }
 }, { timestamps: true });
 
