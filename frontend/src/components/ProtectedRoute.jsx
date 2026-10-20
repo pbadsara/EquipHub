@@ -1,21 +1,17 @@
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext.jsx';
+import { Navigate, useLocation } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 
-/**
- * Gates a route behind authentication and (optionally) a specific role.
- * Unauthenticated users are sent to /login; authenticated users with the
- * wrong role are sent to their own dashboard rather than shown a 403 page.
- */
-export function ProtectedRoute({ role, children }) {
-  const { isAuthenticated, user } = useAuth();
+function ProtectedRoute({ children, roles }) {
+  const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location.pathname }} replace />;
   }
-
-  if (role && user?.role !== role) {
-    return <Navigate to={`/dashboard/${user.role}`} replace />;
+  if (roles && !roles.includes(user.role)) {
+    return <Navigate to="/" replace />;
   }
-
   return children;
 }
+
+export default ProtectedRoute;
