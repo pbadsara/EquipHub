@@ -5,7 +5,10 @@ function SiteFooter() {
     <footer className="site-footer">
       <div className="site-footer-inner">
         <div className="site-footer-brand">
-          <h2>EquipHub</h2>
+          <div className="footer-brand-row">
+            <img src="/favicon.svg" alt="" className="brand-logo" width="28" height="28" />
+            <h2>EquipHub</h2>
+          </div>
           <p>The community marketplace for buying, selling and renting equipment near you.</p>
         </div>
 

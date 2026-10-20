@@ -62,8 +62,11 @@ function SiteHeader() {
     <header>
       <div className="header-inner">
         <Link to="/" className="header-brand">
-          <h1>EquipHub</h1>
-          <p>Community equipment booking platform</p>
+          <img src="/favicon.svg" alt="" className="brand-logo" width="36" height="36" />
+          <div className="header-brand-text">
+            <h1>EquipHub</h1>
+            <p>Community equipment booking platform</p>
+          </div>
         </Link>
 
         <button

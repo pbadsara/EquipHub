@@ -212,12 +212,34 @@ main {
 .header-brand {
   color: inherit;
   text-decoration: none;
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 12px;
   transition: opacity var(--ease);
 }
 
 .header-brand:hover {
   opacity: 0.85;
+}
+
+.header-brand-text {
+  display: block;
+}
+
+.brand-logo {
+  display: block;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+
+.footer-brand-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.footer-brand-row h2 {
+  margin: 0;
 }
 
 .header-menu-toggle {

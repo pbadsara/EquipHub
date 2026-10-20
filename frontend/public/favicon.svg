@@ -1,5 +1,26 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">
-  <rect width="48" height="48" rx="12" fill="#4338ca" />
-  <path d="M30.3 13.5a7 7 0 0 0-9.7 8.9L12 31l5 5 8.6-8.6a7 7 0 0 0 8.9-9.7l-4.9 4.9-3.5-3.5 4.2-4.6z"
-        fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="16" fill="#0a0a0a" />
+
+  <!-- outer ring, centred and sized to fill the badge evenly, with a gap at
+       bottom-right where the cord re-joins it -->
+  <path d="M 24.48 52.68 A 22 22 0 1 1 46.15 48.85"
+        fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" />
+
+  <!-- prongs, pulled in from the top of the ring for breathing room, brought
+       closer together and overlapping the body top for a neat, seamless join -->
+  <rect x="26.3" y="17" width="4.3" height="13" rx="1.6" fill="#ffffff" />
+  <rect x="33.4" y="17" width="4.3" height="13" rx="1.6" fill="#ffffff" />
+
+  <!-- plug body: filled trapezoid, rounded bottom corners, enlarged further -->
+  <path d="M 20 29 L 44 29 L 39.8 45 A 2.6 2.6 0 0 1 37.2 47 L 26.8 47 A 2.6 2.6 0 0 1 24.2 45 Z"
+        fill="#ffffff" />
+
+  <!-- EQH knocked out of the body, where the lightning bolt sits in the reference -->
+  <text x="32" y="41" text-anchor="middle"
+        font-family="Arial, Helvetica, sans-serif" font-weight="800"
+        font-size="7.4" letter-spacing="-0.2" fill="#0a0a0a">EQH</text>
+
+  <!-- cord looping from the plug back round to the ring -->
+  <path d="M 32 47 Q 25 50 30 51.5 Q 37 53 46.15 48.85"
+        fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round" />
 </svg>
