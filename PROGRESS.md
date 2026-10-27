@@ -29,9 +29,26 @@ Built for **Community Resource Network SA** Group: IRP-C262C_4101
 - Basic styling added (dark header, card grid, category badges)
 - Confirmed full stack working: MongoDB, Express, and React connected as such live data rendering in browser
 
-## Next steps
-- Booking model & API (availability, hire requests, admin approval)
-- Authentication (admin vs public users)
-- Stripe payment/deposit integration
-- Availability calendar UI
-- Admin dashboard & reporting
+## Step 4 — Merge with main
+- Merged the team's refactored `main` into `dev/amudhan` and resolved the conflicts
+- Updated local `.env` for the new backend (`MONGO_URI` and `RESEND_API_KEY` are now required)
+- Checked that backend and frontend run together locally
+
+## Step 5 — EQH logo
+- Added an SVG logo (plug in a ring with "EQH") as the favicon and beside the name in the header and footer
+
+## Step 6 — Deployment
+- Frontend API address now comes from `VITE_API_URL`
+- Added `_redirects` so page refreshes work on Netlify
+- Backend deployed on Render and confirmed live at `/api/health`
+- Frontend built with `VITE_API_URL` and deployed on Netlify by uploading the `dist` folder
+- Set `FRONTEND_URL` on Render so the backend knows the Netlify address
+- Added the Stripe test key on Render and confirmed checkout works on the live site
+
+## Step 7 — Testing and documentation
+- Tested the live site on a phone
+- Rewrote `README.md` so someone can run the project locally or use the live site: setup steps, environment variables, how to create an admin account, API overview and troubleshooting
+- Added `DEPLOYMENT.md` (hosting, local vs hosted settings, updating the live site) and `backend/.env.example`
+
+## Status
+The project is live at https://steady-florentine-af6fe2.netlify.app. Not built: booking conditions and cancellation rules, and admin reporting.
