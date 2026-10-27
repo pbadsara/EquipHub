@@ -78,7 +78,7 @@ function SiteHeader() {
           <span className="header-menu-bar" />
           <span className="header-menu-bar" />
           <span className="header-menu-bar" />
-        </button>
+        </button >
 
         <nav className={`header-nav ${menuOpen ? 'header-nav-open' : ''}`}>
           <Link to="/browse">Browse Equipment</Link>
@@ -101,7 +101,7 @@ function SiteHeader() {
           )}
         </nav>
       </div>
-    </header>
+    </header >
   );
 }
 
