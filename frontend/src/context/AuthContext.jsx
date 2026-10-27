@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 
-const API_URL = 'http://localhost:5050/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
 
 const AuthContext = createContext(null);
 

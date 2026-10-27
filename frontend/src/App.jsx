@@ -22,7 +22,7 @@ import CategoryManager from './pages/CategoryManager';
 import { useAuth } from './context/AuthContext';
 import { api } from './api';
 
-const API_URL = 'http://localhost:5050/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5050/api';
 
 // A Listing's shape (name.value, price.value, category.value{...}, etc.)
 // is different from the legacy Equipment shape EquipmentCard expects
