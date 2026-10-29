@@ -141,8 +141,10 @@ Admins can't sign themselves up. To make one:
 │       ├── pages/        # One file per screen
 │       ├── api.js        # All backend calls
 │       └── App.jsx       # Routes, header and footer
-├── DEPLOYMENT.md         # How the live site is hosted
-├── PROGRESS.md           # Build log
+├── docs/                 # Extra documentation
+│   ├── BOOKING_POLICY.md # Booking and cancellation rules
+│   ├── DEPLOYMENT.md     # How the live site is hosted
+│   └── PROGRESS.md       # Build log
 └── README.md
 ```
 
@@ -187,7 +189,7 @@ Every endpoint starts with `/api`. "Logged in" means any valid account.
 
 ## Deployment
 
-The live site runs on Netlify (frontend) and Render (backend). See `DEPLOYMENT.md` for the settings, environment variables, how to update it, and troubleshooting.
+The live site runs on Netlify (frontend) and Render (backend). See `docs/DEPLOYMENT.md` for the settings, environment variables, how to update it, and troubleshooting.
 
 ## Troubleshooting
 
@@ -204,7 +206,7 @@ The live site runs on Netlify (frontend) and Render (backend). See `DEPLOYMENT.m
 
 - Payments run in Stripe test mode only.
 - The free hosting plans sleep when idle, so the first online request can be slow.
-- The live frontend is a static build uploaded manually to Netlify, not linked to GitHub for automatic deploys. Collaborative hosting (team access and deploying from the team's repository) needs a paid Netlify plan, so updating the live site means rebuilding and re-uploading `frontend/dist` (see `DEPLOYMENT.md`).
+- The live frontend is a static build uploaded manually to Netlify, not linked to GitHub for automatic deploys. Collaborative hosting (team access and deploying from the team's repository) needs a paid Netlify plan, so updating the live site means rebuilding and re-uploading `frontend/dist` (see `docs/DEPLOYMENT.md`).
 - Not included: booking conditions and cancellation rules, and admin reporting.
 
 ## References
